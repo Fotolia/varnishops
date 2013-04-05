@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.join(File.dirname(__FILE__),'..','lib')
+
+require 'cmdline'
+require 'varnish_pipe'
+require 'ui'
+
+@config = CmdLine.parse(ARGV)
+
+pipe = VarnishPipe.new
+ui = UI.new(@config)
+
+# set default display options
+sort_mode = :reqps
+sort_order = :desc
+done = false
+
+# trap most of the typical signals
+%w[ INT QUIT HUP KILL ].each do |sig|
+  Signal.trap(sig) do
+    puts "** Caught signal #{sig} - exiting"
+    done = true
+  end
+end
+
+# kick the pipe thread off
+pipe_thr = Thread.new { pipe.start }
+
+# main loop
+until done do
+  ui.header
+  ui.footer
+  ui.render_stats(pipe, sort_mode, sort_order)
+  refresh
+
+  key = ui.input_handler
+  case key
+    when /[Qq]/
+      done = true
+    when /[Cc]/
+      sort_mode = :calls
+    when /[Rr]/
+      sort_mode = :reqps
+    when /[Hh]/
+      sort_mode = :hitratio
+    when /[Tt]/
+      if sort_order == :desc
+        sort_order = :asc
+      else
+        sort_order = :desc
+      end
+  end
+end
+
+## cleanup
+ui.stop
+pipe.stop
+
+## if pipe thread doesn't join immediately kill it off the
+## capture.each loop blocks if no packets have been seen
+if pipe_thr.join(0)
+  pipe_thr.kill
+end
