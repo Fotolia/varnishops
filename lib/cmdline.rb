@@ -37,6 +37,11 @@ class CmdLine
       exit 1
     end
 
+    unless system("which varnishncsa")
+      puts "varnishncsa not found. install it or set a correct PATH"
+      exit 1
+    end
+
     @config
   end
 end
