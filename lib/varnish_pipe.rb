@@ -14,6 +14,14 @@ class VarnishPipe
 
     @semaphore = Mutex.new
     @avg_period = config[:avg_period]
+
+    @regexs = {
+      /^\/(r)\/v2010\/[a-f0-9]{40}\/([a-z]+)\/.*$/ => [1, 2],
+      /^\/jpg((\/\d{2}){4})\/(\d{3}).*_(PX)P\.(jpg)$/ => [5, 3, 4],
+      /^\/jpg((\/\d{2}){4})\/(\d{3}).*\.(\w{3})$/ => [4, 3],
+      /^\/(v2010)\/(\w+)\/.*$/ => [1, 2],
+      /^\/(\w+)\/.*$/ => [1]
+    }
   end
 
   def start
@@ -26,17 +34,11 @@ class VarnishPipe
         url, status, bytes = $1, $2, $3
         key = nil
 
-        case url
-          when /^\/r\/v2010\/[a-f0-9]{40}\/([a-z]+)\/.*$/
-            key = "r:#{$1}"
-          when /^\/jpg((\/\d{2}){4})\/(\d{3}).*_PXP\.jpg$/
-            key = "jpg:#{$3}:PX"
-          when /^\/jpg((\/\d{2}){4})\/(\d{3}).*\.(\w{3})$/
-            key = "#{$4}:#{$3}"
-          when /^\/v2010\/(\w+)\/.*$/
-            key = "v2010:#{$1}"
-          when /^\/(\w+)\/.*$/
-            key = $1
+        @regexs.each do |k,v|
+          if k.match(url)
+            key = v.map{|x| "#{$~[x]}" }.join(":")
+            break
+          end
         end
 
         if key
