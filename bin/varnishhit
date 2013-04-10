@@ -8,12 +8,9 @@ require 'ui'
 
 @config = CmdLine.parse(ARGV)
 
-pipe = VarnishPipe.new
+pipe = VarnishPipe.new(@config)
 ui = UI.new(@config)
 
-# set default display options
-sort_mode = :reqps
-sort_order = :desc
 done = false
 
 # trap most of the typical signals
@@ -31,34 +28,30 @@ pipe_thr = Thread.new { pipe.start }
 until done do
   ui.header
   ui.footer
-  ui.render_stats(pipe, sort_mode, sort_order)
+  ui.render_stats(pipe)
   refresh
 
   key = ui.input_handler
   case key
     when /[Qq]/
       done = true
+    when /[Kk]/
+      ui.sort_mode = :key
     when /[Cc]/
-      sort_mode = :calls
+      ui.sort_mode = :calls
     when /[Rr]/
-      sort_mode = :reqps
+      ui.sort_mode = :reqps
+    when /[Bb]/
+      ui.sort_mode = :bps
     when /[Hh]/
-      sort_mode = :hitratio
+      ui.sort_mode = :hitratio
+    when /[Pp]/
+      ui.show_percent = !ui.show_percent
     when /[Tt]/
-      if sort_order == :desc
-        sort_order = :asc
-      else
-        sort_order = :desc
-      end
+      ui.sort_order =  ui.sort_order == :desc ? :asc : :desc
   end
 end
 
-## cleanup
+# stop threads
 ui.stop
 pipe.stop
-
-## if pipe thread doesn't join immediately kill it off the
-## capture.each loop blocks if no packets have been seen
-if pipe_thr.join(0)
-  pipe_thr.kill
-end
