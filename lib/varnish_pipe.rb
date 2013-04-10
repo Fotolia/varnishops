@@ -1,7 +1,7 @@
 class VarnishPipe
   attr_accessor :stats, :semaphore, :start_time
 
-  def initialize(config)
+  def initialize(config, regexs)
     @stats = {
       :total_reqs => 0,
       :total_bytes => 0,
@@ -14,14 +14,9 @@ class VarnishPipe
 
     @semaphore = Mutex.new
     @avg_period = config[:avg_period]
+    @default_key = "other"
 
-    @regexs = {
-      /^\/(r)\/v2010\/[a-f0-9]{40}\/([a-z]+)\/.*$/ => [1, 2],
-      /^\/jpg((\/\d{2}){4})\/(\d{3}).*_(PX)P\.(jpg)$/ => [5, 3, 4],
-      /^\/jpg((\/\d{2}){4})\/(\d{3}).*\.(\w{3})$/ => [4, 3],
-      /^\/(v2010)\/(\w+)\/.*$/ => [1, 2],
-      /^\/(\w+)\/.*$/ => [1]
-    }
+    @regexs = regexs
   end
 
   def start
@@ -41,32 +36,32 @@ class VarnishPipe
           end
         end
 
-        if key
-          @semaphore.synchronize do
-            duration = (Time.now.to_i - @start_ts)
-            it = duration / @avg_period
-            idx = duration % @avg_period
+        key = @default_key unless key
 
-            @stats[:requests][key] ||= {
-              :hit => Array.new(@avg_period, 0),
-              :miss => Array.new(@avg_period, 0),
-              :bytes => Array.new(@avg_period, 0),
-              :it => Array.new(@avg_period, 0),
-              :last => ""
-            }
+        @semaphore.synchronize do
+          duration = (Time.now.to_i - @start_ts)
+          it = duration / @avg_period
+          idx = duration % @avg_period
 
-            cur_req = @stats[:requests][key]
-            if cur_req[:it][idx] < it
-              cur_req[status.to_sym][idx] = 0
-              cur_req[:bytes][idx] = 0
-            end
-            cur_req[status.to_sym][idx] += 1
-            cur_req[:bytes][idx] += bytes.to_i
-            cur_req[:it][idx] = it
-            cur_req[:last] = url
-            @stats[:total_reqs] += 1
-            @stats[:total_bytes] += bytes.to_i
+          @stats[:requests][key] ||= {
+            :hit => Array.new(@avg_period, 0),
+            :miss => Array.new(@avg_period, 0),
+            :bytes => Array.new(@avg_period, 0),
+            :it => Array.new(@avg_period, 0),
+            :last => ""
+          }
+
+          cur_req = @stats[:requests][key]
+          if cur_req[:it][idx] < it
+            cur_req[status.to_sym][idx] = 0
+            cur_req[:bytes][idx] = 0
           end
+          cur_req[status.to_sym][idx] += 1
+          cur_req[:bytes][idx] += bytes.to_i
+          cur_req[:it][idx] = it
+          cur_req[:last] = url
+          @stats[:total_reqs] += 1
+          @stats[:total_bytes] += bytes.to_i
         end
       end
 

@@ -8,7 +8,16 @@ require 'ui'
 
 @config = CmdLine.parse(ARGV)
 
-pipe = VarnishPipe.new(@config)
+@regexs = {}
+# load regex config file
+begin
+  load @config[:config_file]
+rescue Exception => e
+  puts "Unable to load config.rb (#{e.message})"
+  exit 1
+end
+
+pipe = VarnishPipe.new(@config, @regexs)
 ui = UI.new(@config)
 
 done = false

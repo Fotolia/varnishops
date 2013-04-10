@@ -5,13 +5,13 @@ class CmdLine
     @config = {}
 
     opts = OptionParser.new do |opt|
-      @config[:discard_thresh] = 0
-      opt.on '-d', '--discard=THRESH', Float, 'Discard keys with request/sec rate below THRESH' do |discard_thresh|
-        @config[:discard_thresh] = discard_thresh
+      @config[:config_file] = File.join(File.dirname(File.dirname(__FILE__)), 'config.rb')
+      opt.on '-c', '--config-file=FILE', String, 'Config file containing regular expressions to categorize traffic' do |config_file|
+        @config[:config_file] = File.expand_path(config_file)
       end
 
       @config[:refresh_rate] = 500
-      opt.on '-r', '--refresh=MS', Float, 'Refresh the stats display every MS milliseconds' do |refresh_rate|
+      opt.on '-r', '--refresh=MS', Integer, 'Refresh the stats display every MS milliseconds' do |refresh_rate|
         @config[:refresh_rate] = refresh_rate
       end
 
@@ -31,6 +31,11 @@ class CmdLine
     # limit data structures size
     @config[:avg_period] = 600 if @config[:avg_period] > 600
     @config[:avg_period] = 10 if @config[:avg_period] < 10
+
+    unless File.exists?(@config[:config_file])
+      puts "#{@config[:config_file]}: no such file"
+      exit 1
+    end
 
     @config
   end
