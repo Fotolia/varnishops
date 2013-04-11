@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |gem|
   gem.name          = "varnishops"
-  gem.version       = "0.0.1"
+  gem.version       = "0.0.2"
   gem.authors       = ["Jonathan Amiez"]
   gem.email         = ["jonathan.amiez@fotolia.com"]
   gem.description   = %q{varnishops - a realtime varnish log analyzer}
