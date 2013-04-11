@@ -8,6 +8,8 @@ URLs from varnishncsa are categorized using custom regular expressions, based on
 
 varnishops is written in Ruby (tested with MRI 1.9.3) and depends only on varnishncsa.
 
+![varnishops](https://raw.github.com/Fotolia/varnishops/master/doc/varnishops.png)
+
 ## Setup
 
  * git clone https://github.com/Fotolia/varnishops
@@ -15,7 +17,7 @@ OR
  * gem install varnishops
 
 
-By default, all URLs will be categorized as "other", and statistics will be computed based on the global varnish traffic
+By default, URLs will be categorized based on their extensions, and statistics computed for each type.
 
 Categories can be added by defining filters (ruby regexps). See example file in **ext/**.
 

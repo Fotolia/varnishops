@@ -37,7 +37,7 @@ class CmdLine
       exit 1
     end
 
-    unless system("which varnishncsa")
+    unless ENV['PATH'].split(File::PATH_SEPARATOR).any? {|d| File.executable?(File.join(d, "varnishncsa"))}
       puts "varnishncsa not found. install it or set a correct PATH"
       exit 1
     end
