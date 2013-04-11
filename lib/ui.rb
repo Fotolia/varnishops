@@ -158,7 +158,7 @@ class UI
     unless @show_percent
       setpos(top.length + 2, 0)
       line = sprintf "%-#{@key_col_width + @url_col_width}s %14.d %14.2f %14.2f",
-               "TOTAL", totals[:calls], totals[:reqps], totals[:bps] / 1000
+               "TOTAL", totals[:calls].to_i, totals[:reqps].to_f, totals[:bps].to_f / 1000
       addstr(line)
     end
 

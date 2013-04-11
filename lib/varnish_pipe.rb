@@ -1,3 +1,5 @@
+require "thread"
+
 class VarnishPipe
   attr_accessor :stats, :semaphore, :start_time
 
