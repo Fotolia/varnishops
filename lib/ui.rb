@@ -50,7 +50,8 @@ class UI
 
     attrset(color_pair(1))
     setpos(0,0)
-    addstr(sprintf "%-#{@key_col_width}s%-#{@url_col_width}s%s", "request pattern", "last url", @stat_cols.join)
+    
+    addstr(sprintf "%-#{@key_col_width}s%-#{@url_col_width}s%s", (@config[:host_mode]) ? "hostname" : "request pattern", "last url", @stat_cols.join)
   end
 
   def footer
