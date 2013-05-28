@@ -20,6 +20,11 @@ class CmdLine
         @config[:avg_period] = avg_period
       end
 
+      @config[:host_mode] = false
+      opt.on '-H', '--host-mode', "Categorize requests using hostnames instead of url regexps" do |host_mode|
+        @config[:host_mode] = true
+      end
+
       opt.on_tail '-h', '--help', 'Show usage info' do
         puts opts
         exit

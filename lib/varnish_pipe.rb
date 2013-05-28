@@ -16,6 +16,7 @@ class VarnishPipe
 
     @semaphore = Mutex.new
     @avg_period = config[:avg_period]
+    @host_mode = config[:host_mode]
     @default_key = "other"
 
     @regexs = regexs
@@ -26,19 +27,23 @@ class VarnishPipe
     @start_time = Time.new.to_f
     @start_ts = @start_time.to_i
 
-    IO.popen("varnishncsa -F '%U %{Varnish:hitmiss}x %b'").each_line do |line|
-      if line =~ /^(\S+) (\w+) (\d+)$/
-        url, status, bytes = $1, $2, $3
+    IO.popen("varnishncsa -F '%{Host}i %U %{Varnish:hitmiss}x %b'").each_line do |line|
+      if line =~ /^(\S+) (\S+) (\w+) (\d+)$/
+        host, url, status, bytes = $1, $2, $3, $4
         key = nil
 
-        @regexs.each do |k,v|
-          if k.match(url)
-            key = v.map{|x| "#{$~[x]}" }.join(":")
-            break
+        if (@host_mode) 
+          key = host;
+        else
+          @regexs.each do |k,v|
+            if k.match(url)
+              key = v.map{|x| "#{$~[x]}" }.join(":")
+              break
+            end
           end
+          key = @default_key unless key
         end
 
-        key = @default_key unless key
 
         @semaphore.synchronize do
           duration = (Time.now.to_i - @start_ts)
