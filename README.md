@@ -4,7 +4,9 @@ varnishops is a tool for analyzing and categorizing traffic on your varnish serv
 
 It gathers the output of varnishncsa and create statistics such as request rate, output bandwidth or hitratio.
 
-URLs from varnishncsa are categorized using custom regular expressions, based on your assets' paths and classification (example provided in **ext/**)
+URLs from varnishncsa can be categorized in two ways:
+ * using custom regular expressions applied on URL, based on your assets' paths and classification (example provided in **ext/**)
+ * using host header, if you have several assets domains (with -H switch)
 
 varnishops is written in Ruby (tested with MRI 1.9.3 and MRI 1.8.7) and depends only on varnishncsa.
 
